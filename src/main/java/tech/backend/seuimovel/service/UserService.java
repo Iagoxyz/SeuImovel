@@ -23,8 +23,7 @@ public class UserService {
     }
 
     public User login(LoginDTO dto) {
-        return userRepository.findByEmail(dto.email)
-                .filter(u -> u.getPassword().equals(dto.password))
+        return userRepository.findByEmailAndPassword(dto.getEmail(), dto.getPassword())
                 .orElseThrow(() -> new RuntimeException("Credenciais inválidas"));
     }
 }
