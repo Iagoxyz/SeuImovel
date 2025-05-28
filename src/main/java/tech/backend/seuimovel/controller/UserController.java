@@ -19,6 +19,7 @@ import tech.backend.seuimovel.session.Session;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/")
@@ -52,11 +53,15 @@ public class UserController {
         return ResponseEntity.ok("Usuário autenticado com sucesso");
     }
 
-    @PostMapping("/anuncios")
-    public ResponseEntity<?> criarAnuncio(@RequestBody ListingDTO dto) {
-        if (Session.currentUser == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Usuário não autenticado");
+    @PostMapping("/criar/anuncios/{usuarioId}")
+    public ResponseEntity<?> criarAnuncio(@PathVariable Long usuarioId, @RequestBody ListingDTO dto) {
+        Optional<User> userOptional = userRepository.findById(usuarioId);
+
+        if (userOptional.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Usuário com ID " + usuarioId + " não encontrado");
         }
+
+        User usuario = userOptional.get();
 
         Listing anuncio = new Listing();
         anuncio.setCategoria(dto.getCategoria());
@@ -67,11 +72,10 @@ public class UserController {
         anuncio.setPreco(dto.getPreco());
         anuncio.setStatus(dto.getStatus());
         anuncio.setImgURL(dto.getImgURL());
-        anuncio.setUsuario(Session.currentUser); // <-- sem passar ID
+        anuncio.setUsuario(usuario);
 
         Listing salvo = listingRepository.save(anuncio);
 
-        // Retorna só os dados do anúncio (sem o objeto usuario completo)
         Map<String, Object> response = new HashMap<>();
         response.put("imgUrl", salvo.getImgURL());
         response.put("status", salvo.getStatus());
@@ -84,6 +88,23 @@ public class UserController {
         response.put("id", salvo.getId());
 
         return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/anuncios/{id}")
+    public ResponseEntity<?> buscarAnunciosPorUsuario(@PathVariable("id") Long usuarioId) {
+        Optional<User> usuarioOptional = userRepository.findById(usuarioId);
+
+        if (usuarioOptional.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Usuário com ID " + usuarioId + " não encontrado");
+        }
+
+        List<Listing> anuncios = listingRepository.findByUsuarioId(usuarioId);
+
+        if (anuncios.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Nenhum anúncio encontrado para o usuário com ID: " + usuarioId);
+        }
+
+        return ResponseEntity.ok(anuncios);
     }
 
     @DeleteMapping("/anuncios/{id}")
