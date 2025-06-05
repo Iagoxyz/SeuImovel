@@ -4,10 +4,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import tech.backend.seuimovel.dto.ListingDTO;
-import tech.backend.seuimovel.dto.LoginDTO;
-import tech.backend.seuimovel.dto.LoginResponseDTO;
-import tech.backend.seuimovel.dto.UserDTO;
+import tech.backend.seuimovel.dto.*;
 import tech.backend.seuimovel.entities.Listing;
 import tech.backend.seuimovel.entities.User;
 
@@ -121,6 +118,22 @@ public class UserController {
     public ResponseEntity<List<Listing>> listarAnuncios() {
         List<Listing> anuncios = listingRepository.findAll();
         return ResponseEntity.ok(anuncios);
+    }
+
+    @PutMapping("/usuarios/recuperar-senha")
+    public ResponseEntity<?> recuperarSenha(@RequestBody RecuperarSenhaDTO dto) {
+        Optional<User> usuarioOptional = userRepository.findByEmail(dto.getEmail());
+
+        if (usuarioOptional.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body("Usuário com e-mail " + dto.getEmail() + " não encontrado");
+        }
+
+        User usuario = usuarioOptional.get();
+        usuario.setPassword(dto.getNovaSenha());
+        userRepository.save(usuario);
+
+        return ResponseEntity.ok("Senha atualizada com sucesso!");
     }
 
 }
