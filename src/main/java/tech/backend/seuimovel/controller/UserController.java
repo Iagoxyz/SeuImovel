@@ -50,10 +50,11 @@ public class UserController {
         return ResponseEntity.ok("Usuário autenticado com sucesso");
     }
 
-    @PostMapping("/criar/anuncios/{usuarioId}")
-    public ResponseEntity<?> criarAnuncio(@PathVariable Long usuarioId, @RequestBody ListingDTO dto) {
-        Optional<User> userOptional = userRepository.findById(usuarioId);
+    @PostMapping("/criar/anuncios")
+    public ResponseEntity<?> criarAnuncio(@RequestBody ListingDTO dto) {
+        Long usuarioId = dto.getUsuarioId();
 
+        Optional<User> userOptional = userRepository.findById(usuarioId);
         if (userOptional.isEmpty()) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Usuário com ID " + usuarioId + " não encontrado");
         }
